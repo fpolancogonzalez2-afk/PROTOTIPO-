@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SICE UNEFA - Sistema Centralizado</title>
+    <!-- MÓDULO C: Librería externa para generación de PDF real -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* === ESTILOS BASE === */
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #e9ecef; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .contenedor-app { width: 380px; height: 650px; background: #3A86FF; color: white; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); padding: 20px; box-sizing: border-box; position: relative; overflow-y: auto; overflow-x: hidden;}
+        
+        .pantalla { display: none; width: 100%; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; }
+        .pantalla-activa { display: flex; }
+        
+        h2 { color: #ff6e40; margin-top: 15px; margin-bottom: 5px; font-size: 20px; text-transform: uppercase; }
+        .subtitulo { font-size: 11px; color: #ff6e40; font-weight: bold; margin-bottom: 15px; letter-spacing: 1px; }
+        
+        .logo-placeholder { width: 60px; height: 60px; border-radius: 50%; margin: 10px auto; border: 2px dashed #888; display: flex; justify-content: center; align-items: center; }
+        .logo-placeholder::after { content: "LOGO"; font-size: 12px; color: #888; font-weight: bold; }
+
+        /* === FORMULARIOS UX/UI === */
+        .grupo-input { width: 90%; margin: 8px 0; display: flex; justify-content: center; align-items: center; background: white; border-radius: 6px; overflow: hidden; }
+        .select-nacionalidad { background: #f0f0f0; border: none; padding: 12px 5px; font-weight: bold; color: #1e3d59; outline: none; border-right: 1px solid #ccc; }
+        input[type="text"], input[type="password"], input[type="number"] { flex: 1; padding: 12px; border: none; font-size: 14px; background-color: transparent; color: #333; outline: none; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .btn-ojito { background: none; border: none; padding: 0 10px; cursor: pointer; color: #888; font-size: 16px; outline: none; }
+        .select-carrera { width: 90%; padding: 12px; margin: 8px 0; border: none; border-radius: 6px; font-size: 14px; color: #333; }
+
+        button { background-color: #ff6e40; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 90%; transition: background 0.2s; box-sizing: border-box;}
+        button:hover { background-color: #e65c00; }
+        .btn-secundario { background-color: transparent; border: 1px solid #ff6e40; color: #ff6e40; margin-top: 10px;}
+        .enlace-texto { font-size: 12px; color: #17b978; text-decoration: underline; cursor: pointer; margin-top: 15px; }
+
+        /* === MÓDULO DE MATERIAS === */
+        .info-uc { font-size: 13px; margin-bottom: 10px; background: #17b978; padding: 5px 15px; border-radius: 20px; font-weight: bold; display: inline-block; }
+        .contenedor-materias { width: 100%; max-height: 200px; overflow-y: auto; text-align: left; margin-bottom: 10px;}
+        .materia-card { background: #224466; width: 95%; padding: 10px; margin: 6px auto; border-radius: 6px; font-size: 12px; display: flex; align-items: center; border-left: 4px solid #17b978; }
+        .materia-card input { margin-right: 10px; transform: scale(1.2); cursor: pointer; }
+        
+        /* === HORARIO VISUAL DINÁMICO === */
+        .contenedor-horario { background: #224466; width: 95%; padding: 8px; border-radius: 6px; box-sizing: border-box; overflow-x: auto; margin-bottom: 10px;}
+        .titulo-horario { font-size: 11px; color: white; text-align: left; margin: 0 0 5px 0; border-bottom: 1px solid #17b978; padding-bottom: 3px;}
+        #tabla-horario { width: 100%; border-collapse: collapse; font-size: 10px; text-align: center; }
+        #tabla-horario th, #tabla-horario td { border: 1px solid #1e3d59; padding: 6px 2px; }
+        #tabla-horario th { background-color: #17b978; color: white; font-weight: bold;}
+        .celda-libre { background-color: #f0f0f0; color: #aaa; }
+        .celda-ocupada { background-color: #17b978; color: white; font-weight: bold; transition: 0.3s; }
+        .celda-choque { background-color: #ff414d; color: white; font-weight: bold; animation: vibrar 0.3s ease; }
+        
+        @keyframes vibrar {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            50% { transform: translateX(2px); }
+            75% { transform: translateX(-2px); }
+            100% { transform: translateX(0); }
+        }
+
+        /* === ALERTAS Y RESULTADOS === */
+        .cuadro-alerta { background: #ff414d; color: white; padding: 10px; border-radius: 6px; font-size: 12px; margin: 5px auto; width: 90%; display: none; }
+        .recuadro-codigo { border: 1px dashed #ff6e40; padding: 12px; font-family: monospace; font-size: 11px; background: #172a3a; width: 90%; text-align: left; margin: 15px auto; border-radius: 4px; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+<div class="contenedor-app">
+
+    <!-- PANTALLA: LOGIN -->
+    <div id="vista-login" class="pantalla pantalla-activa">
+        <div class="logo-placeholder"></div>
+        <h2>Sistema SICE</h2>
+        <div class="subtitulo">INGRESO AL SISTEMA</div>
+        
+        <div class="cuadro-alerta" id="alerta-login"></div>
+
+        <div class="grupo-input">
+            <select class="select-nacionalidad" id="log-nac"><option value="V-">V-</option><option value="E-">E-</option></select>
+            <input type="number" id="log-cedula" placeholder="Cédula de Identidad">
+        </div>
+        
+        <div class="grupo-input">
+            <input type="password" id="log-clave" placeholder="Contraseña">
+            <button class="btn-ojito" type="button" onclick="toggleOjito('log-clave')">👁️</button>
+        </div>
+        
+        <button onclick="ejecutarLogin()">INICIAR SESIÓN</button>
+        <div class="enlace-texto" onclick="navegarA('vista-login', 'vista-registro')">¿No tienes cuenta? Regístrate aquí</div>
+    </div>
+
+    <!-- PANTALLA: REGISTRO -->
+    <div id="vista-registro" class="pantalla">
+        <h2>Registro</h2>
+        <div class="subtitulo">NUEVO PERFIL ACADÉMICO</div>
+        
+        <div class="cuadro-alerta" id="alerta-registro"></div>
+
+        <div class="grupo-input" style="background:transparent;">
+            <input type="text" id="reg-nombre" placeholder="Nombre Completo" style="background:white; border-radius:6px; width:100%;">
+        </div>
+        
+        <div class="grupo-input">
+            <select class="select-nacionalidad" id="reg-nac"><option value="V-">V-</option><option value="E-">E-</option></select>
+            <input type="number" id="reg-cedula" placeholder="Cédula">
+        </div>
+        
+        <select class="select-carrera" id="reg-carrera">
+            <option value="">Seleccione su Carrera...</option>
+            <option value="ing_sistemas">Ingeniería de Sistemas</option>
+            <option value="enfermeria">Enfermería</option>
+            <option value="administracion">Administración de Desastres</option>
+        </select>
+
+        <div class="grupo-input">
+            <input type="password" id="reg-clave" placeholder="Crear Contraseña">
+            <button class="btn-ojito" type="button" onclick="toggleOjito('reg-clave')">👁️</button>
+        </div>
+
+        <button onclick="ejecutarRegistro()">REGISTRARSE</button>
+        <button class="btn-secundario" onclick="navegarA('vista-registro', 'vista-login')">VOLVER</button>
+    </div>
+
+    <!-- PANTALLA: MATERIAS (ESTUDIANTES) -->
+    <div id="vista-materias" class="pantalla">
+        <h2 style="font-size: 18px;">Oferta Académica</h2>
+        <div class="subtitulo" id="lbl-carrera-actual">CARRERA</div>
+        
+        <div class="info-uc">Límite: 20 UC | Seleccionadas: <span id="contador-uc">0</span></div>
+        <div class="cuadro-alerta" id="alerta-materias"></div>
+
+        <div class="contenedor-materias" id="lista-materias-dinamica"></div>
+        
+        <div class="contenedor-horario">
+            <p class="titulo-horario">Previsualización de Horario</p>
+            <table id="tabla-horario">
+                <thead>
+                    <tr><th>Hora</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>07:00</td><td id="celda-lunes-1" class="celda-libre">-</td><td id="celda-martes-1" class="celda-libre">-</td><td id="celda-miercoles-1" class="celda-libre">-</td><td id="celda-jueves-1" class="celda-libre">-</td><td id="celda-viernes-1" class="celda-libre">-</td></tr>
+                    <tr><td>08:30</td><td id="celda-lunes-2" class="celda-libre">-</td><td id="celda-martes-2" class="celda-libre">-</td><td id="celda-miercoles-2" class="celda-libre">-</td><td id="celda-jueves-2" class="celda-libre">-</td><td id="celda-viernes-2" class="celda-libre">-</td></tr>
+                    <tr><td>10:00</td><td id="celda-lunes-3" class="celda-libre">-</td><td id="celda-martes-3" class="celda-libre">-</td><td id="celda-miercoles-3" class="celda-libre">-</td><td id="celda-jueves-3" class="celda-libre">-</td><td id="celda-viernes-3" class="celda-libre">-</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <button onclick="procesarInscripcionFinal()">CONFIRMAR INSCRIPCIÓN</button>
+        <div class="enlace-texto" style="color:#ff414d;" onclick="cerrarSesion()">Cancelar y Salir</div>
+    </div>
+
+    <!-- MÓDULO D: PANTALLA EXCLUSIVA DE ADMINISTRADOR -->
+    <div id="vista-admin" class="pantalla">
+        <h2>Panel de Control</h2>
+        <div class="subtitulo">CONTROL DE ESTUDIOS</div>
+        <div class="recuadro-codigo" style="background:#224466; width:95%; margin-top:20px;">
+            <strong style="color:#ff6e40;">SITUACIÓN MATRÍCULA:</strong><br><br>
+            • Estudiantes en Base de Datos: <span id="adm-total-usuarios">0</span><br>
+            • Carreras Ofertadas: 3<br>
+            • Sincronización de Servidores: Activa<br>
+            • Modo Operacional: Monitoreo Global
+        </div>
+        <button class="btn-secundario" onclick="cerrarSesion()">CERRAR SESIÓN</button>
+    </div>
+
+    <!-- PANTALLA: ÉXITO DE TRANSACCIÓN -->
+    <div id="vista-exito" class="pantalla">
+        <h2 style="color: #17b978; font-size: 22px;">¡Inscripción Exitosa!</h2>
+        
+        <!-- id="comprobante-pdf" añadido para delimitar el área de captura del documento -->
+        <div class="recuadro-codigo" id="comprobante-pdf">
+            <div style="text-align: center; font-weight: bold; margin-bottom: 8px; color: #ff6e40;">COMPROBANTE OFICIAL SICE</div>
+            <strong>ESTUDIANTE:</strong> <span id="doc-nombre"></span><br>
+            <strong>CÉDULA:</strong> <span id="doc-cedula"></span><br>
+            <strong>CARRERA:</strong> <span id="doc-carrera"></span><br>
+            <strong>UC INSCRITAS:</strong> <span id="doc-uc"></span><br>
+            <hr style="border: 0.5px solid #224466; margin: 10px 0;">
+            <strong>AUTENTICACIÓN:</strong> FIRMA DIGITAL PROCESADA
+        </div>
+
+        <button onclick="ejecutarDescargaPDF()">DESCARGAR PLANILLA (PDF)</button>
+        <button class="btn-secundario" onclick="cerrarSesion()">FINALIZAR SESIÓN</button>
+    </div>
+
+</div>
+
+<script>
+    /* ==========================================================================
+       1. DATASETS LOGICIALES Y ROLES DE ACCESO
+       ========================================================================== */
+    // MÓDULO A & D: Agregadas propiedades 'aprobadas' (prelaciones) y 'rol' (Administrador/Estudiante)
+    let bd_usuarios = [
+        { nombre: "Eduardo Mendoza", cedula: "V-28000111", clave: "12345", carrera_id: "ing_sistemas", aprobadas: ["s1"], rol: "estudiante" },
+        { nombre: "Francisca Polanco", cedula: "V-30600222", clave: "unefa2026", carrera_id: "ing_sistemas", aprobadas: [], rol: "estudiante" },
+        { nombre: "Control De Estudios", cedula: "V-11111111", clave: "adminunefa", carrera_id: null, aprobadas: [], rol: "admin" }
+    ];
+
+    // MÓDULO A: Modificado el árbol de asignaturas para incluir dependencias lógicas de prelación
+    const bd_carreras = {
+        "ing_sistemas": {
+            nombre: "Ingeniería de Sistemas",
+            materias: [
+                { id: "s1", nombre: "Sis. Información II", uc: 6, dia: "lunes", hora: "1", prelacion: null },
+                { id: "s2", nombre: "Cálculo IV", uc: 5, dia: "martes", hora: "2", prelacion: null },
+                { id: "s3", nombre: "Base de Datos", uc: 4, dia: "lunes", hora: "1", prelacion: "s1" }, // Requiere s1 aprobado
+                { id: "s4", nombre: "Defensa Integral V", uc: 2, dia: "miercoles", hora: "3", prelacion: null },
+                { id: "s5", nombre: "Arq. Computador", uc: 4, dia: "jueves", hora: "2", prelacion: "s2" }  // Requiere s2 aprobado
+            ]
+        },
+        "enfermeria": {
+            nombre: "Enfermería",
+            materias: [
+                { id: "e1", nombre: "Anatomía Humana II", uc: 5, dia: "lunes", hora: "1", prelacion: null },
+                { id: "e2", nombre: "Farmacología", uc: 4, dia: "martes", hora: "1", prelacion: null },
+                { id: "e3", nombre: "Salud Pública", uc: 3, dia: "miercoles", hora: "2", prelacion: null },
+                { id: "e4", nombre: "Prácticas Clínicas I", uc: 6, dia: "jueves", hora: "3", prelacion: "e1" }
+            ]
+        },
+        "administracion": {
+            nombre: "Administración de Desastres",
+            materias: [
+                { id: "a1", nombre: "Gestión de Riesgos", uc: 4, dia: "lunes", hora: "2", prelacion: null },
+                { id: "a2", nombre: "Primeros Auxilios", uc: 3, dia: "martes", hora: "2", prelacion: null },
+                { id: "a3", nombre: "Logística", uc: 4, dia: "miercoles", hora: "1", prelacion: null },
+                { id: "a4", nombre: "Geografía Física", uc: 3, dia: "jueves", hora: "1", prelacion: "a1" }
+            ]
+        }
+    };
+
+    let usuarioActivo = null;
+    const LIMITE_UC = 20;
+    let choqueGlobal = false;
+
+    /* ==========================================================================
+       2. CONTROLADOR DE PERSISTENCIA (MÓDULO B)
+       ========================================================================== */
+    window.onload = function() {
+        let sesionGuardada = localStorage.getItem('sice_sesion');
+        if(sesionGuardada) {
+            usuarioActivo = JSON.parse(sesionGuardada);
+            if(usuarioActivo.rol === "admin") {
+                ejecutarFlujoAdmin();
+            } else {
+                cargarOfertaAcademica();
+                actualizarCuadroHorario();
+                navegarA('vista-login', 'vista-materias');
+            }
+        }
+    };
+
+    /* ==========================================================================
+       3. INTERFAZ Y NAVEGACIÓN
+       ========================================================================== */
+    function navegarA(idOcultar, idMostrar) {
+        document.getElementById(idOcultar).classList.remove('pantalla-activa');
+        document.getElementById(idMostrar).classList.add('pantalla-activa');
+        document.querySelectorAll('.cuadro-alerta').forEach(alerta => alerta.style.display = 'none');
+    }
+
+    function toggleOjito(inputId) {
+        let input = document.getElementById(inputId);
+        input.type = input.type === "password" ? "text" : "password";
+    }
+
+    function mostrarAlerta(elementoId, mensaje) {
+        let alerta = document.getElementById(elementoId);
+        alerta.innerText = mensaje;
+        alerta.style.display = "block";
+    }
+
+    /* ==========================================================================
+       4. CONTROL DE REGISTRO Y LOGIN INTERNO
+       ========================================================================== */
+    function ejecutarRegistro() {
+        let nombre = document.getElementById('reg-nombre').value.trim();
+        let nac = document.getElementById('reg-nac').value;
+        let cedula = document.getElementById('reg-cedula').value.trim();
+        let carrera = document.getElementById('reg-carrera').value;
+        let clave = document.getElementById('reg-clave').value.trim();
+
+        if(!nombre || !cedula || !carrera || !clave) {
+            mostrarAlerta('alerta-registro', "Error: Todos los campos son obligatorios."); 
+            return;
+        }
+
+        let cedulaCompleta = nac + cedula;
+        if(bd_usuarios.find(u => u.cedula === cedulaCompleta)) {
+            mostrarAlerta('alerta-registro', "Error: Esta cédula ya está registrada."); 
+            return;
+        }
+
+        bd_usuarios.push({ nombre: nombre, cedula: cedulaCompleta, clave: clave, carrera_id: carrera, aprobadas: [], rol: "estudiante" });
+        alert("¡Registro Exitoso! Ahora puede iniciar sesión.");
+        
+        document.getElementById('reg-nombre').value = ""; 
+        document.getElementById('reg-cedula').value = "";
+        document.getElementById('reg-clave').value = ""; 
+        document.getElementById('reg-carrera').value = "";
+        navegarA('vista-registro', 'vista-login');
+    }
+
+    function ejecutarLogin() {
+        let nac = document.getElementById('log-nac').value;
+        let ced = document.getElementById('log-cedula').value.trim();
+        let clave = document.getElementById('log-clave').value.trim();
+
+        if(!ced || !clave) { 
+            mostrarAlerta('alerta-login', "Error: Ingrese credenciales."); 
+            return; 
+        }
+
+        let cedulaCompleta = nac + ced;
+        let usuarioEncontrado = bd_usuarios.find(u => u.cedula === cedulaCompleta && u.clave === clave);
+
+        if(usuarioEncontrado) {
+            usuarioActivo = usuarioEncontrado;
+            
+            // MÓDULO B: Almacenamiento local de credenciales de sesión activa
+            localStorage.setItem('sice_sesion', JSON.stringify(usuarioActivo));
+
+            // MÓDULO D: Evaluación del rol para bifurcar el destino de navegación
+            if(usuarioActivo.rol === "admin") {
+                ejecutarFlujoAdmin();
+            } else {
+                cargarOfertaAcademica();
+                actualizarCuadroHorario();
+                navegarA('vista-login', 'vista-materias');
+            }
+        } else {
+            mostrarAlerta('alerta-login', "Error: Cédula o contraseña incorrectos.");
+        }
+    }
+
+    // MÓDULO D: Operación del panel administrativo
+    function ejecutarFlujoAdmin() {
+        document.getElementById('adm-total-usuarios').innerText = bd_usuarios.length;
+        navegarA('vista-login', 'vista-admin');
+    }
+
+    /* ==========================================================================
+       5. SISTEMATIZACIÓN DE MATERIAS Y PRELACIONES
+       ========================================================================== */
+    function cargarOfertaAcademica() {
+        let datosCarrera = bd_carreras[usuarioActivo.carrera_id];
+        document.getElementById('lbl-carrera-actual').innerText = datosCarrera.nombre.toUpperCase();
+        document.getElementById('contador-uc').innerText = "0";
+        document.getElementById('alerta-materias').style.display = "none";
+        
+        let contenedorLista = document.getElementById('lista-materias-dinamica');
+        contenedorLista.innerHTML = ""; 
+
+        datosCarrera.materias.forEach(materia => {
+            let divCard = document.createElement('div');
+            divCard.className = 'materia-card';
+            
+            let chk = document.createElement('input');
+            chk.type = 'checkbox';
+            chk.className = 'chk-materia';
+            chk.value = materia.uc;
+            chk.id = 'mat-' + materia.id;
+            
+            chk.dataset.dia = materia.dia;
+            chk.dataset.hora = materia.hora;
+            chk.dataset.nombre = materia.nombre;
+            
+            // MÓDULO A: Verificación algorítmica de cumplimiento de prelación
+            let cumplePrelacion = !materia.prelacion || usuarioActivo.aprobadas.includes(materia.prelacion);
+
+            if(!cumplePrelacion) {
+                chk.disabled = true;
+                divCard.style.opacity = "0.4";
+                divCard.style.borderLeftColor = "#ff414d";
+            } else {
+                chk.onchange = calcularCreditosYHorario;
+            }
+
+            let lbl = document.createElement('label');
+            lbl.htmlFor = chk.id;
+            lbl.innerText = materia.nombre + " (" + materia.uc + " UC)" + (!cumplePrelacion ? " 🔒" : "");
+            lbl.style.cursor = cumplePrelacion ? "pointer" : "not-allowed";
+
+            divCard.appendChild(chk);
+            divCard.appendChild(lbl);
+            contenedorLista.appendChild(divCard);
+        });
+    }
+
+    function calcularCreditosYHorario() {
+        let checkboxes = document.querySelectorAll('.chk-materia:checked');
+        let totalUc = 0;
+        
+        checkboxes.forEach(chk => { totalUc += parseInt(chk.value); });
+        document.getElementById('contador-uc').innerText = totalUc;
+        
+        if(totalUc > LIMITE_UC) {
+            mostrarAlerta('alerta-materias', "⚠️ LÍMITE EXCEDIDO: Desmarque materias para no superar las " + LIMITE_UC + " UC.");
+        } else {
+            document.getElementById('alerta-materias').style.display = "none";
+        }
+        
+        actualizarCuadroHorario();
+    }
+
+    function actualizarCuadroHorario() {
+        choqueGlobal = false;
+
+        document.querySelectorAll('[id^="celda-"]').forEach(celda => {
+            celda.classList.remove('celda-ocupada', 'celda-choque');
+            celda.classList.add('celda-libre');
+            celda.innerText = '-';
+        });
+
+        const seleccionadas = document.querySelectorAll('.chk-materia:checked');
+        
+        seleccionadas.forEach(chk => {
+            const dia = chk.dataset.dia;
+            const hora = chk.dataset.hora;
+            const nombreCorto = chk.dataset.nombre.substring(0, 5) + "."; 
+            
+            const celda = document.getElementById(`celda-${dia}-${hora}`);
+            if (celda) {
+                if (!celda.classList.contains('celda-libre')) {
+                    celda.classList.remove('celda-ocupada', 'celda-libre');
+                    celda.classList.add('celda-choque');
+                    celda.innerText = 'CHOQUE';
+                    choqueGlobal = true;
+                } else {
+                    celda.classList.remove('celda-libre');
+                    celda.classList.add('celda-ocupada');
+                    celda.innerText = nombreCorto;
+                }
+            }
+        });
+
+        if(choqueGlobal) {
+            mostrarAlerta('alerta-materias', "⚠️ ERROR: Tiene materias chocando en el mismo horario (Ver cuadro rojo).");
+        } else if (parseInt(document.getElementById('contador-uc').innerText) <= LIMITE_UC) {
+            document.getElementById('alerta-materias').style.display = "none";
+        }
+    }
+
+    function procesarInscripcionFinal() {
+        let uc = parseInt(document.getElementById('contador-uc').innerText);
+        
+        if(uc === 0) { mostrarAlerta('alerta-materias', "Seleccione al menos una asignatura."); return; }
+        if(uc > LIMITE_UC) { mostrarAlerta('alerta-materias', "Corrija el exceso de UC antes de confirmar."); return; }
+        if(choqueGlobal) { mostrarAlerta('alerta-materias', "Resuelva el conflicto de horario detectado."); return; }
+
+        document.getElementById('doc-nombre').innerText = usuarioActivo.nombre.toUpperCase();
+        document.getElementById('doc-cedula').innerText = usuarioActivo.cedula;
+        document.getElementById('doc-carrera').innerText = bd_carreras[usuarioActivo.carrera_id].nombre.toUpperCase();
+        document.getElementById('doc-uc').innerText = uc;
+
+        navegarA('vista-materias', 'vista-exito');
+    }
+
+    /* ==========================================================================
+       6. TRANSACCIÓN EXTERNA: RENDICIÓN PDF (MÓDULO C)
+       ========================================================================= */
+    function ejecutarDescargaPDF() {
+        const areaCaptura = document.getElementById('comprobante-pdf');
+        
+        const directricesImpresion = {
+            margin: 8,
+            filename: `SICE_Comprobante_${usuarioActivo.cedula}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, letterRendering: true, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a5', orientation: 'portrait' }
+        };
+
+        html2pdf().set(directricesImpresion).from(areaCaptura).save();
+    }
+
+    function cerrarSesion() {
+        // MÓDULO B: Destrucción de la cookie sintética local
+        localStorage.removeItem('sice_sesion');
+
+        let pantallaActual = "vista-login";
+        if(usuarioActivo) {
+            pantallaActual = usuarioActivo.rol === "admin" ? "vista-admin" : "vista-materias";
+            if(document.getElementById('vista-exito').classList.contains('pantalla-activa')) {
+                pantallaActual = "vista-exito";
+            }
+        }
+
+        usuarioActivo = null;
+        document.getElementById('log-cedula').value = ""; 
+        document.getElementById('log-clave').value = "";
+        
+        document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('pantalla-activa'));
+        document.getElementById('vista-login').classList.add('pantalla-activa');
+    }
+</script>
+
+</body>
+</html>
