@@ -11,13 +11,13 @@
     <style>
         /* === ESTILOS BASE === */
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #e9ecef; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .contenedor-app { width: 380px; height: 650px; background: #3A86FF; color: white; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); padding: 20px; box-sizing: border-box; position: relative; overflow-y: auto; overflow-x: hidden; }
+        .contenedor-app { width: 380px; height: 650px; background: #B8D4F5; color: white; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); padding: 20px; box-sizing: border-box; position: relative; overflow-y: auto; overflow-x: hidden; }
         
         .pantalla { display: none; width: 100%; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; }
         .pantalla-activa { display: flex; }
         
         h1 { margin: 10px 0 5px 0; font-size: 24px; letter-spacing: 2px;}
-        h2 { color: #FF1744; margin-top: 5px; margin-bottom: 5px; font-size: 18px; text-transform: uppercase; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+        h2 { color: #1A3A5C; margin-top: 5px; margin-bottom: 5px; font-size: 18px; text-transform: uppercase; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
         h3 { font-size: 12px; color: white; margin-bottom: 15px;}
         
         .cuadro-alerta { background: #FF1744; color: white; padding: 10px; border-radius: 6px; font-size: 12px; margin: 10px 0; width: 100%; display: none; box-sizing: border-box; }
@@ -28,11 +28,11 @@
         .grupo-cedula select { width: 25%; font-weight: bold; background: #f0f0f0; }
         .grupo-cedula input { width: 75%; }
         
-        button.btn-principal { background-color: #FF1744; color: white; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 4px 6px rgba(255, 23, 68, 0.3); transition: 0.2s; }
-        button.btn-principal:hover { background-color: #D50000; }
-        button.btn-secundario { background-color: white; color: #FF1744; border: 1px solid #FF1744; font-weight: bold; cursor: pointer; }
+        button.btn-principal { background-color: #1A3A5C; color: white; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 4px 6px rgba(255, 23, 68, 0.3); transition: 0.2s; }
+        button.btn-principal:hover { background-color: #4A8AC4; }
+        button.btn-secundario { background-color: white; color: #5B9BD5; border: 1px solid #5B9BD5; font-weight: bold; cursor: pointer; }
         
-        .materia-card { background: #224466; padding: 10px; margin: 6px 0; border-radius: 6px; width: 100%; text-align: left; display: flex; align-items: center; border-left: 4px solid #17b978; box-sizing: border-box; font-size: 13px;}
+        .materia-card { background: #D6E8F7; padding: 10px; margin: 6px 0; border-radius: 6px; width: 100%; text-align: left; display: flex; align-items: center; border-left: 4px solid #17b978; box-sizing: border-box; font-size: 13px;}
         .chk-materia { margin-right: 10px; width: auto; transform: scale(1.2); cursor: pointer; }
         #lista-materias-dinamica { width: 100%; max-height: 200px; overflow-y: auto; margin-bottom: 10px; }
         
@@ -45,7 +45,7 @@
         
         @keyframes vibrar { 0% { transform: translateX(0); } 25% { transform: translateX(-2px); } 50% { transform: translateX(2px); } 75% { transform: translateX(-2px); } 100% { transform: translateX(0); } }
 
-        #comprobante-pdf { background: white; color: #333; padding: 15px; border-radius: 8px; margin: 15px 0; width: 100%; box-sizing: border-box; text-align: left; border: 2px dashed #FF1744; }
+        #comprobante-pdf { background: white; color: #333; padding: 15px; border-radius: 8px; margin: 15px 0; width: 100%; box-sizing: border-box; text-align: left; border: 2px dashed #5B9BD5; }
         #comprobante-pdf p { margin: 5px 0; font-size: 13px; }
     </style>
 </head>
